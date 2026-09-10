@@ -6,4 +6,6 @@ import com.owlbuy.owlbuy.model.Product;
 public interface ProductDao {
     Integer createProduct(ProductRequest productRequest);
     Product getProductById(Integer productId);
+    void updateProduct(Integer productId, ProductRequest productRequest);
+    void deleteProductById(Integer productId);
 }

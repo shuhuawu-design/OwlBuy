@@ -11,6 +11,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,5 +52,32 @@ public class ProductDaoImpl implements ProductDao {
         }else{
             return null;
         }
+    }
+
+    @Override
+    public void updateProduct(Integer productId, ProductRequest productRequest) {
+        String sql="UPDATE product SET product_name=:product_name,category=:category, price=:price, stock=:stock, image_url=:image_url, description=:description WHERE product_id=:product_id";
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("product_id", productId);
+        map.put("product_name", productRequest.getProductName());
+        map.put("category", productRequest.getCategory().name());
+        map.put("price", productRequest.getPrice());
+        map.put("stock", productRequest.getStock());
+        map.put("image_url", productRequest.getImageUrl());
+        map.put("description", productRequest.getDescription());
+
+        map.put("updated_date", new Date());
+
+        namedParameterJdbcTemplate.update(sql, new MapSqlParameterSource(map));
+    }
+
+    @Override
+    public void deleteProductById(Integer productId) {
+        String sql = "DELETE FROM product WHERE product_id=:productId";
+        Map<String, Object> map = new HashMap<>();
+        map.put("productId", productId);
+
+        namedParameterJdbcTemplate.update(sql, map);
     }
 }
