@@ -133,6 +133,7 @@ public class ProductDaoImpl implements ProductDao {
         namedParameterJdbcTemplate.update(sql, new MapSqlParameterSource(map));
     }
 
+    //新增查詢條件
     private String addFilteringSql(String sql,Map<String,Object> map,ProductQueryParam productQueryParam){
 
         if (productQueryParam.getCategory()!=null){
