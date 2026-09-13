@@ -1,29 +1,21 @@
-package com.owlbuy.owlbuy.model;
+package com.owlbuy.owlbuy.dto;
 
 import com.owlbuy.owlbuy.constant.ProductCategory;
+import com.owlbuy.owlbuy.constant.ProductStatus;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class Product {
-    private Integer productId;
+public class ProductUpdateRequest {
     private String productName;
     private ProductCategory category;
     private BigDecimal price;
     private Integer stock;
     private String imageUrl;
     private String description;
-    private String status;
-    private Date createdDate;
+    private ProductStatus status;
     private Date updatedDate;
-
-    public Integer getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Integer productId) {
-        this.productId = productId;
-    }
 
     public String getProductName() {
         return productName;
@@ -73,20 +65,12 @@ public class Product {
         this.description = description;
     }
 
-    public String getStatus() {
+    public ProductStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ProductStatus status) {
         this.status = status;
-    }
-
-    public Date getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
     }
 
     public Date getUpdatedDate() {

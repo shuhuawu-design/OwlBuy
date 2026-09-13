@@ -1,6 +1,7 @@
 package com.owlbuy.owlbuy.dto;
 
 import com.owlbuy.owlbuy.constant.ProductCategory;
+import com.owlbuy.owlbuy.constant.ProductStatus;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -18,9 +19,9 @@ public class ProductRequest {
     @NotNull
     private String imageUrl;
     private String description;
+    private ProductStatus status;
     private Date createdDate;
     private Date updatedDate;
-
 
     public String getProductName() {
         return productName;
@@ -68,6 +69,14 @@ public class ProductRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public ProductStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ProductStatus status) {
+        this.status = status;
     }
 
     public Date getCreatedDate() {

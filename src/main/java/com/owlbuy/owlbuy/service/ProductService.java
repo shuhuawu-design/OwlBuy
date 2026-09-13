@@ -1,11 +1,17 @@
 package com.owlbuy.owlbuy.service;
 
+import com.owlbuy.owlbuy.dto.ProductQueryParam;
 import com.owlbuy.owlbuy.dto.ProductRequest;
+import com.owlbuy.owlbuy.dto.ProductUpdateRequest;
 import com.owlbuy.owlbuy.model.Product;
+
+import java.util.List;
 
 public interface ProductService {
     Integer createProduct(ProductRequest productRequest);
     Product getProductById(Integer productId);
-    void updateProduct(Integer productId, ProductRequest productRequest);
+    List<Product>getProducts(ProductQueryParam productQueryParam);
+    Integer countProducts(ProductQueryParam productQueryParam);
+    void updateProduct(Integer productId, ProductUpdateRequest productUpdateRequest);
     void deleteProductById(Integer productId);
 }

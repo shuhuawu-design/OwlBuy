@@ -1,11 +1,15 @@
 package com.owlbuy.owlbuy.service.impl;
 
 import com.owlbuy.owlbuy.dao.ProductDao;
+import com.owlbuy.owlbuy.dto.ProductQueryParam;
 import com.owlbuy.owlbuy.dto.ProductRequest;
+import com.owlbuy.owlbuy.dto.ProductUpdateRequest;
 import com.owlbuy.owlbuy.model.Product;
 import com.owlbuy.owlbuy.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class ProductServiceImpl implements ProductService {
@@ -25,8 +29,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void updateProduct(Integer productId, ProductRequest productRequest) {
-        productDao.updateProduct(productId, productRequest);
+    public List<Product> getProducts(ProductQueryParam productQueryParam) {
+        List<Product>productList=productDao.getProducts(productQueryParam);
+        return productList;
+    }
+
+    @Override
+    public Integer countProducts(ProductQueryParam productQueryParam) {
+        Integer total=productDao.countProducts(productQueryParam);
+        return total;
+    }
+
+    @Override
+    public void updateProduct(Integer productId, ProductUpdateRequest productUpdateRequest) {
+        productDao.updateProduct(productId, productUpdateRequest);
     }
 
     @Override
