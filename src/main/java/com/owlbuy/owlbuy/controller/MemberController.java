@@ -1,7 +1,9 @@
 package com.owlbuy.owlbuy.controller;
 
+import com.owlbuy.owlbuy.dto.MemberRegisterRequest;
 import com.owlbuy.owlbuy.model.Member;
 import com.owlbuy.owlbuy.service.MemberService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +23,11 @@ public class MemberController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody Member member){
-        String hashPassword =passwordEncoder.encode(member.getPassword());
-        member.setPassword(hashPassword);
+    public ResponseEntity<String> register(@Valid @RequestBody MemberRegisterRequest memberRegisterRequest){
+        String hashPassword =passwordEncoder.encode(memberRegisterRequest.getPassword());
+        memberRegisterRequest.setPassword(hashPassword);
 
-        memberService.createMember(member);
+        memberService.createMember(memberRegisterRequest);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("註冊成功");
 
