@@ -24,15 +24,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     @Override
     public void createCart(Integer memberId,CartRequest cartRequest) {
-        //檢查該member是否已建立購物車
-        Cart cart=cartDao.getCartByMemberId(memberId);
-        Integer cartId;
-
-        if(cart==null){
-            cartId=cartDao.createCart(memberId);
-        }else{
-            cartId=cart.getCartId();
-        }
+        Integer cartId=getValidCartId(memberId);
 
         //檢查想加入的商品是否已下架或不存在
         Product product=productDao.getProductById(cartRequest.getProductId());
@@ -57,14 +49,8 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public List<CartItemResponse> getCartItems(Integer memberId) {
+        return cartDao.getCartItemsByMemberId(memberId);
 
-        Integer cartId=getValidCartId(memberId);
-        List<CartItemResponse> cartItemResponse=cartDao.getCartItemsByMemberId(cartId);
-        if(cartItemResponse==null||cartItemResponse.size()==0){
-            throw new IllegalArgumentException("購物車內無商品");
-        }
-
-        return cartItemResponse;
     }
 
     @Transactional
@@ -74,7 +60,7 @@ public class CartServiceImpl implements CartService {
 
         CartItem cartItem=cartDao.findCartItem(cartId,productId);
         if(cartItem==null){
-            throw new IllegalArgumentException("購物車內無此商品");
+            return;
         }
         Integer quantity=cartItem.getQuantity();
 
@@ -98,10 +84,10 @@ public class CartServiceImpl implements CartService {
     private Integer getValidCartId(Integer memberId){
         Cart cart=cartDao.getCartByMemberId(memberId);
         if(cart==null){
-            throw new IllegalArgumentException("購物車不存在");
+            return cartDao.createCart(memberId);
+        }else{
+            return cart.getCartId();
         }
-        Integer cartId=cart.getCartId();
-        return cartId;
     }
 
 }

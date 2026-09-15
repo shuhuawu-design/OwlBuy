@@ -1,10 +1,14 @@
 package com.owlbuy.owlbuy.model;
 
+import java.util.Date;
+
 public class CartItem {
     private Integer cartItemId;
     private Integer cartId;
     private Integer productId;
     private Integer quantity;
+    private Date  createdDate;
+    private Date updatedDate;
 
     public Integer getCartItemId() {
         return cartItemId;
@@ -36,5 +40,21 @@ public class CartItem {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public Date getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public Date getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(Date updatedDate) {
+        this.updatedDate = updatedDate;
     }
 }

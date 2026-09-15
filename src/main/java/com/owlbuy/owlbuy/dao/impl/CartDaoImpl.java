@@ -26,7 +26,7 @@ public class CartDaoImpl implements CartDao {
 
     @Override
     public Cart getCartByMemberId(Integer memberId) {
-        String sql="SELECT cart_id, member_id, created_date, updated_date FROM cart WHERE member_id = :member_id";
+        String sql="SELECT cart_id, member_id, created_date FROM cart WHERE member_id = :member_id";
         Map<String,Object> map=new HashMap<>();
         map.put("member_id",memberId);
 
@@ -69,7 +69,7 @@ public class CartDaoImpl implements CartDao {
 
     @Override
     public CartItem findCartItem(Integer cartId, Integer productId) {
-        String sql="SELECT cart_item_id, cart_id, product_id, quantity FROM cart_item WHERE cart_id = :cart_id AND product_id = :product_id";
+        String sql="SELECT cart_item_id, cart_id, product_id, quantity, created_date, updated_date FROM cart_item WHERE cart_id = :cart_id AND product_id = :product_id";
         Map<String,Object> map=new HashMap<>();
         map.put("cart_id",cartId);
         map.put("product_id",productId);
@@ -105,7 +105,7 @@ public class CartDaoImpl implements CartDao {
 
     @Override
     public void deleteCartItem(Integer cartId, Integer productId) {
-        String sql="DELETE cart_item WHERE cart_id = :cartId and product_id = :productId";
+        String sql="DELETE FROM cart_item WHERE cart_id = :cartId and product_id = :productId";
         Map<String,Object> map=new HashMap<>();
         map.put("cartId",cartId);
         map.put("productId",productId);

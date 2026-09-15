@@ -6,7 +6,7 @@ public class Cart {
     private Integer cartId;
     private Integer memberId;
     private Date created_date;
-    private Date updated_date;
+
 
 
     public Integer getCartId() {
@@ -33,11 +33,4 @@ public class Cart {
         this.created_date = created_date;
     }
 
-    public Date getUpdated_date() {
-        return updated_date;
-    }
-
-    public void setUpdated_date(Date updated_date) {
-        this.updated_date = updated_date;
-    }
 }
