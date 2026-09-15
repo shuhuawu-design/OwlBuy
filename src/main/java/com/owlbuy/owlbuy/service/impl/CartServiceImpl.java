@@ -2,13 +2,17 @@ package com.owlbuy.owlbuy.service.impl;
 
 import com.owlbuy.owlbuy.dao.CartDao;
 import com.owlbuy.owlbuy.dao.ProductDao;
+import com.owlbuy.owlbuy.dto.CartItemResponse;
 import com.owlbuy.owlbuy.dto.CartRequest;
+import com.owlbuy.owlbuy.model.Cart;
 import com.owlbuy.owlbuy.model.CartItem;
 import com.owlbuy.owlbuy.model.Product;
 import com.owlbuy.owlbuy.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Component
 public class CartServiceImpl implements CartService {
@@ -17,19 +21,19 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private ProductDao productDao;
 
-    @Override
-    public Integer createCart(Integer memberId) {
-        //檢查該member是否已建立購物車
-        Integer cartId=cartDao.getCartByMemberId(memberId);
-        if(cartId==null){
-            cartId=cartDao.createCart(memberId);
-        }
-        return cartId;
-    }
-
     @Transactional
     @Override
-    public void createCartItem(Integer cartId, CartRequest cartRequest) {
+    public void createCart(Integer memberId,CartRequest cartRequest) {
+        //檢查該member是否已建立購物車
+        Cart cart=cartDao.getCartByMemberId(memberId);
+        Integer cartId;
+
+        if(cart==null){
+            cartId=cartDao.createCart(memberId);
+        }else{
+            cartId=cart.getCartId();
+        }
+
         //檢查想加入的商品是否已下架或不存在
         Product product=productDao.getProductById(cartRequest.getProductId());
         if(product==null || "DISCONTINUED".equals(product.getStatus())){
@@ -41,11 +45,63 @@ public class CartServiceImpl implements CartService {
         CartItem existProduct=cartDao.findCartItem(cartId,productId);
 
         if(existProduct==null){
-            cartDao.createCartItem(cartId,cartRequest);
+            Integer cartProductId=cartRequest.getProductId();
+            Integer quantity=cartRequest.getQuantity();
+            cartDao.createCartItem(cartId,cartProductId, quantity);
         }else{
             Integer cartItemId=existProduct.getCartItemId();
             Integer newQuantity=existProduct.getQuantity()+cartRequest.getQuantity();
-            cartDao.updateQuantity(cartItemId,newQuantity);
+            cartDao.updateCartQuantity(cartItemId,newQuantity);
         }
     }
+
+    @Override
+    public List<CartItemResponse> getCartItems(Integer memberId) {
+
+        Integer cartId=getValidCartId(memberId);
+        List<CartItemResponse> cartItemResponse=cartDao.getCartItemsByMemberId(cartId);
+        if(cartItemResponse==null||cartItemResponse.size()==0){
+            throw new IllegalArgumentException("購物車內無商品");
+        }
+
+        return cartItemResponse;
+    }
+
+    @Transactional
+    @Override
+    public void decreaseCartItem(Integer memberId, Integer productId) {
+        Integer cartId=getValidCartId(memberId);
+
+        CartItem cartItem=cartDao.findCartItem(cartId,productId);
+        if(cartItem==null){
+            throw new IllegalArgumentException("購物車內無此商品");
+        }
+        Integer quantity=cartItem.getQuantity();
+
+        if(quantity<=1){
+            cartDao.deleteCartItem(cartId,productId);
+        }else{
+            Integer newQuantity=quantity-1;
+            Integer cartItemId=cartItem.getCartItemId();
+            cartDao.updateCartQuantity(cartItemId,newQuantity);
+        }
+
+    }
+
+    @Transactional
+    @Override
+    public void deleteCartItem(Integer memberId, Integer productId) {
+        Integer cartId=getValidCartId(memberId);
+        cartDao.deleteCartItem(cartId,productId);
+    }
+
+    private Integer getValidCartId(Integer memberId){
+        Cart cart=cartDao.getCartByMemberId(memberId);
+        if(cart==null){
+            throw new IllegalArgumentException("購物車不存在");
+        }
+        Integer cartId=cart.getCartId();
+        return cartId;
+    }
+
 }

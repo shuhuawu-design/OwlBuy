@@ -1,13 +1,18 @@
 package com.owlbuy.owlbuy.dao;
 
+import com.owlbuy.owlbuy.dto.CartItemResponse;
 import com.owlbuy.owlbuy.dto.CartRequest;
+import com.owlbuy.owlbuy.model.Cart;
 import com.owlbuy.owlbuy.model.CartItem;
 
+import java.util.List;
+
 public interface CartDao {
-    Integer getCartByMemberId(Integer memberId);
+    Cart getCartByMemberId(Integer memberId);
     Integer createCart(Integer memberId);
     CartItem findCartItem(Integer cartId,Integer productId);
-    void createCartItem(Integer cartId, CartRequest cartRequest);
-    void updateQuantity(Integer cartItemId,Integer newQuantity);
-
+    void createCartItem(Integer cartId, Integer productId, Integer quantity);
+    void updateCartQuantity(Integer cartItemId,Integer quantity);
+    void deleteCartItem(Integer cartId,Integer productId);
+    List<CartItemResponse>getCartItemsByMemberId(Integer memberId);
 }

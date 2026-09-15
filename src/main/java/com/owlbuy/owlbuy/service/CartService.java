@@ -1,9 +1,13 @@
 package com.owlbuy.owlbuy.service;
 
+import com.owlbuy.owlbuy.dto.CartItemResponse;
 import com.owlbuy.owlbuy.dto.CartRequest;
-import com.owlbuy.owlbuy.security.CustomUserDetail;
+
+import java.util.List;
 
 public interface CartService {
-    Integer createCart(Integer memberId);
-    void createCartItem(Integer cartId, CartRequest cartRequest);
+    void createCart(Integer memberId, CartRequest cartRequest);
+    void decreaseCartItem(Integer memberId, Integer productId);
+    void deleteCartItem(Integer memberId, Integer productId);
+    List<CartItemResponse> getCartItems(Integer memberId);
 }

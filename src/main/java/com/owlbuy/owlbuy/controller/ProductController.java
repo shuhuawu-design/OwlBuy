@@ -8,6 +8,8 @@ import com.owlbuy.owlbuy.model.Product;
 import com.owlbuy.owlbuy.service.ProductService;
 import com.owlbuy.owlbuy.util.Page;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,8 +45,8 @@ public class ProductController {
             @RequestParam(name="search",required = false) String search,
             @RequestParam(defaultValue = "created_date") String orderBy,
             @RequestParam(defaultValue = "desc") String sort,
-            @RequestParam(defaultValue = "20") Integer limit,
-            @RequestParam(defaultValue = "0") Integer offset) {
+            @RequestParam(defaultValue = "20")@Max(1000)@Min(0) Integer limit,
+            @RequestParam(defaultValue = "0")@Min(0) Integer offset) {
         ProductQueryParam productQueryParam=new ProductQueryParam();
         productQueryParam.setCategory(category);
         productQueryParam.setSearch(search);
