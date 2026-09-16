@@ -45,7 +45,7 @@ public class CartDaoImpl implements CartDao {
                 FROM cart AS c
                 JOIN cart_item AS ci ON c.cart_id= ci.cart_id
                 JOIN product AS p ON ci.product_id= p.product_id
-                WHERE c.member_id= 1
+                WHERE c.member_id= :member_id
                 """;
 
         Map<String,Object> map=new HashMap<>();
