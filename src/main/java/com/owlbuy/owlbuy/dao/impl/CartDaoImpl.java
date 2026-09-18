@@ -39,6 +39,20 @@ public class CartDaoImpl implements CartDao {
     }
 
     @Override
+    public CartItem getCartItemByCartItemId(Integer cartItemId) {
+        String sql="SELECT cart_item_id, cart_id, product_id, quantity, created_date, updated_date FROM cart_item WHERE cart_item_id = :cart_item_id";
+        Map<String,Object> map=new HashMap<>();
+        map.put("cart_item_id",cartItemId);
+
+        List<CartItem> cartItemList=namedParameterJdbcTemplate.query(sql,map,new CartItemRowMapper());
+        if (cartItemList.isEmpty()){
+            return null;
+        }else{
+            return cartItemList.get(0);
+        }
+    }
+
+    @Override
     public List<CartItemResponse> getCartItemsByMemberId(Integer memberId) {
         String sql= """
                 SELECT ci.cart_item_id, ci.quantity, p.product_id, p.product_name, p.price, p.image_url, p.status ,(ci.quantity * p.price) AS subtotal
@@ -109,6 +123,15 @@ public class CartDaoImpl implements CartDao {
         Map<String,Object> map=new HashMap<>();
         map.put("cartId",cartId);
         map.put("productId",productId);
+        namedParameterJdbcTemplate.update(sql,map);
+    }
+
+    @Override
+    public void deleteCartItemList(List<Integer> cartItemIdList) {
+        String sql="DELETE FROM cart_item WHERE cart_item_id IN (:cartItemIdList)";
+        Map<String,Object> map=new HashMap<>();
+        map.put("cartItemIdList",cartItemIdList);
+
         namedParameterJdbcTemplate.update(sql,map);
     }
 }

@@ -17,7 +17,7 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @PostMapping
+    @PostMapping("/order")
     public ResponseEntity<Void> createOrder(@AuthenticationPrincipal CustomUserDetail memberDetail, @RequestBody OrderRequest orderRequest){
         Integer memberId=memberDetail.getMemberId();
         orderService.createOrder(memberId,orderRequest);

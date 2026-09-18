@@ -9,10 +9,12 @@ import java.util.List;
 
 public interface CartDao {
     Cart getCartByMemberId(Integer memberId);
+    CartItem getCartItemByCartItemId(Integer cartItemId);
     Integer createCart(Integer memberId);
     CartItem findCartItem(Integer cartId,Integer productId);
     void createCartItem(Integer cartId, Integer productId, Integer quantity);
     void updateCartQuantity(Integer cartItemId,Integer quantity);
     void deleteCartItem(Integer cartId,Integer productId);
+    void deleteCartItemList(List<Integer> cartItemIdList);
     List<CartItemResponse>getCartItemsByMemberId(Integer memberId);
 }
