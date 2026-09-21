@@ -39,10 +39,15 @@ public class CartDaoImpl implements CartDao {
     }
 
     @Override
-    public CartItem getCartItemByCartItemId(Integer cartItemId) {
-        String sql="SELECT cart_item_id, cart_id, product_id, quantity, created_date, updated_date FROM cart_item WHERE cart_item_id = :cart_item_id";
+    public CartItem getCartItemByCartItemId(Integer cartItemId, Integer memberId) {
+        String sql="""
+            SELECT ci.cart_item_id, ci.cart_id, ci.product_id, ci.quantity, ci.created_date, ci.updated_date, c.member_id 
+            FROM cart_item AS ci 
+            JOIN cart AS c ON c.cart_id=ci.cart_id 
+            WHERE ci.cart_item_id = :cart_item_id AND c.member_id = :member_id""";
         Map<String,Object> map=new HashMap<>();
         map.put("cart_item_id",cartItemId);
+        map.put("member_id",memberId);
 
         List<CartItem> cartItemList=namedParameterJdbcTemplate.query(sql,map,new CartItemRowMapper());
         if (cartItemList.isEmpty()){

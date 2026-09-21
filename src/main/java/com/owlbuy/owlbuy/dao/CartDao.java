@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface CartDao {
     Cart getCartByMemberId(Integer memberId);
-    CartItem getCartItemByCartItemId(Integer cartItemId);
+    CartItem getCartItemByCartItemId(Integer cartItemId, Integer memberId);
     Integer createCart(Integer memberId);
     CartItem findCartItem(Integer cartId,Integer productId);
     void createCartItem(Integer cartId, Integer productId, Integer quantity);

@@ -4,11 +4,16 @@ import com.owlbuy.owlbuy.constant.PaymentMethod;
 import com.owlbuy.owlbuy.dao.CartDao;
 import com.owlbuy.owlbuy.dao.OrderDao;
 import com.owlbuy.owlbuy.dao.ProductDao;
+import com.owlbuy.owlbuy.dto.OrderItemResponse;
+import com.owlbuy.owlbuy.dto.OrderQueryParam;
 import com.owlbuy.owlbuy.dto.OrderRequest;
+import com.owlbuy.owlbuy.dto.OrderResponse;
 import com.owlbuy.owlbuy.model.CartItem;
 import com.owlbuy.owlbuy.model.OrderItem;
+import com.owlbuy.owlbuy.model.Orders;
 import com.owlbuy.owlbuy.model.Product;
 import com.owlbuy.owlbuy.service.OrderService;
+import com.owlbuy.owlbuy.util.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,8 +22,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Component
 public class OrderServiceImpl implements OrderService {
@@ -46,7 +54,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItem>orderItemList=new ArrayList<>();
 
         for (Integer cartItemId : cartItemIdList) {
-            CartItem cartItem = cartDao.getCartItemByCartItemId(cartItemId);
+            CartItem cartItem = cartDao.getCartItemByCartItemId(cartItemId,memberId);
             if(cartItem==null){
                 throw new IllegalArgumentException("找不到購物車項目");
             }
@@ -75,22 +83,90 @@ public class OrderServiceImpl implements OrderService {
 
 
         }
-        Integer orderId=orderDao.createOrder(orderSn,memberId,totalAmount, paymentMethod,shippingName,shippingPhone, shippingAddress);
+        Orders order=new Orders();
+        order.setOrderSn(orderSn);
+        order.setMemberId(memberId);
+        order.setTotalAmount(totalAmount);
+        order.setPaymentMethod(paymentMethod);
+        order.setShippingName(shippingName);
+        order.setShippingPhone(shippingPhone);
+        order.setShippingAddress(shippingAddress);
+        Integer orderId=orderDao.createOrder(order);
+
+
 
         for(OrderItem orderItem :orderItemList){
-            Integer productId=orderItem.getProductId();
-            BigDecimal price=orderItem.getPrice();
-            Integer quantity=orderItem.getQuantity();
-            String productName=orderItem.getProductName();
-            orderDao.createOrderItem(orderId, productId,productName,price,quantity);
-            Integer updateRows = productDao.decreaseStock(productId,quantity);
+            orderItem.setOrderId(orderId);
+            Integer updateRows = productDao.decreaseStock(orderItem.getProductId(), orderItem.getQuantity());
             if (updateRows == 0){
-                throw new IllegalArgumentException("商品 "+productName+ " 庫存不足，下單失敗");
+                throw new IllegalArgumentException("商品 "+orderItem.getProductName()+ " 庫存不足，下單失敗");
             }
         }
 
-
+        orderDao.createOrderItem(orderItemList);
         cartDao.deleteCartItemList(cartItemIdList);
+    }
+
+    @Override
+    public Page<OrderResponse> getOrders(OrderQueryParam orderQueryParam) {
+        Integer total=orderDao.countOrders(orderQueryParam);
+
+        List<Orders>orderlist=orderDao.getOrders(orderQueryParam);
+        if(orderlist==null||orderlist.isEmpty()){
+            Page<OrderResponse> page=new Page<>();
+            page.setLimit(orderQueryParam.getLimit());
+            page.setOffset(orderQueryParam.getOffset());
+            page.setTotal(0);
+            page.setList(new ArrayList<>());
+            return page;
+        }
+
+        List<Integer>orderIdList=new ArrayList<>();
+        for (Orders orders:orderlist){
+            orderIdList.add(orders.getOrderId());
+        }
+
+        List<OrderItemResponse>orderItems=orderDao.getOrderItemsByOrderIdList(orderIdList);
+
+        Map<Integer, List<OrderItemResponse>>orderItemsMap=new HashMap<>();
+        for(OrderItemResponse orderItem:orderItems){
+            Integer orderId=orderItem.getOrderId();
+
+            if (!orderItemsMap.containsKey(orderId)){
+                orderItemsMap.put(orderId, new ArrayList<>());
+            }
+            orderItemsMap.get(orderId).add(orderItem);
+        }
+        List<OrderResponse>orderResponseList=new ArrayList<>();
+        for (Orders orders:orderlist){
+            OrderResponse orderResponse=new OrderResponse();
+            orderResponse.setOrderId(orders.getOrderId());
+            orderResponse.setOrderSn(orders.getOrderSn());
+            orderResponse.setStatus(orders.getStatus());
+            orderResponse.setTotalAmount(orders.getTotalAmount());
+            orderResponse.setPaymentMethod(orders.getPaymentMethod());
+            orderResponse.setShippingName(orders.getShippingName());
+            orderResponse.setShippingPhone(orders.getShippingPhone());
+            orderResponse.setShippingAddress(orders.getShippingAddress());
+            orderResponse.setCreatedDate(orders.getCreatedDate());
+            orderResponse.setUpdatedDate(orders.getUpdatedDate());
+
+            List<OrderItemResponse>orderItemList=orderItemsMap.get(orders.getOrderId());
+            if(orderItemList==null||orderItemList.isEmpty()){
+                orderItemList=new ArrayList<>();
+            }
+            orderResponse.setOrderItemList(orderItemList);
+
+            orderResponseList.add(orderResponse);
+
+        }
+
+        Page<OrderResponse> page=new Page<>();
+        page.setLimit(orderQueryParam.getLimit());
+        page.setOffset(orderQueryParam.getOffset());
+        page.setTotal(total);
+        page.setList(orderResponseList);
+        return page;
     }
 
     private static String generateOrderSn(Integer memberId) {

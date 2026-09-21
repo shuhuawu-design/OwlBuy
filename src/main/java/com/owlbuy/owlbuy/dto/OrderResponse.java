@@ -1,21 +1,24 @@
-package com.owlbuy.owlbuy.model;
+package com.owlbuy.owlbuy.dto;
 
 import com.owlbuy.owlbuy.constant.OrderStatus;
 import com.owlbuy.owlbuy.constant.PaymentMethod;
+import com.owlbuy.owlbuy.model.OrderItem;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
-public class Orders {
+public class OrderResponse {
     private Integer orderId;
     private String orderSn;
-    private Integer memberId;
     private OrderStatus status;
     private BigDecimal totalAmount;
     private PaymentMethod paymentMethod;
     private String shippingName;
     private String shippingPhone;
     private String shippingAddress;
+
+    private List<OrderItemResponse> orderItemList;
     private Date createdDate;
     private Date updatedDate;
 
@@ -33,14 +36,6 @@ public class Orders {
 
     public void setOrderSn(String orderSn) {
         this.orderSn = orderSn;
-    }
-
-    public Integer getMemberId() {
-        return memberId;
-    }
-
-    public void setMemberId(Integer memberId) {
-        this.memberId = memberId;
     }
 
     public OrderStatus getStatus() {
@@ -89,6 +84,14 @@ public class Orders {
 
     public void setShippingAddress(String shippingAddress) {
         this.shippingAddress = shippingAddress;
+    }
+
+    public List<OrderItemResponse> getOrderItemList() {
+        return orderItemList;
+    }
+
+    public void setOrderItemList(List<OrderItemResponse> orderItemList) {
+        this.orderItemList = orderItemList;
     }
 
     public Date getCreatedDate() {
