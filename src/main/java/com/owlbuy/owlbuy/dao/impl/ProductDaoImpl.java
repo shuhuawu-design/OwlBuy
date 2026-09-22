@@ -153,7 +153,7 @@ public class ProductDaoImpl implements ProductDao {
         }
         if (productQueryParam.getSearch()!=null){
             sql = sql + "AND product_name LIKE :search ";
-            map.put("search", productQueryParam.getSearch());
+            map.put("search", "%"+productQueryParam.getSearch()+"%");
         }
         return sql;
     }

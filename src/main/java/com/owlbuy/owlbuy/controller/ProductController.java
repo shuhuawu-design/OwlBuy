@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 public class ProductController {
     @Autowired
@@ -23,8 +21,7 @@ public class ProductController {
 
     @PostMapping("/products")
     public ResponseEntity<Product> createProduct(@RequestBody @Valid ProductRequest productRequest) {
-        Integer productId=productService.createProduct(productRequest);
-        Product product=productService.getProductById(productId);
+        Product product=productService.createProduct(productRequest);
 
         return ResponseEntity.ok().body(product);
     }
@@ -32,11 +29,8 @@ public class ProductController {
     @GetMapping("/products/{productId}")
     public ResponseEntity<Product> getProductById(@PathVariable Integer productId) {
         Product product=productService.getProductById(productId);
-        if(product!=null){
-            return ResponseEntity.ok().body(product);
-        }else{
-            return ResponseEntity.notFound().build();
-        }
+
+        return ResponseEntity.ok().body(product);
     }
 
     @GetMapping("/products")
@@ -45,7 +39,7 @@ public class ProductController {
             @RequestParam(name="search",required = false) String search,
             @RequestParam(defaultValue = "created_date") String orderBy,
             @RequestParam(defaultValue = "desc") String sort,
-            @RequestParam(defaultValue = "20")@Max(1000)@Min(0) Integer limit,
+            @RequestParam(defaultValue = "20")@Max(100)@Min(0) Integer limit,
             @RequestParam(defaultValue = "0")@Min(0) Integer offset) {
         ProductQueryParam productQueryParam=new ProductQueryParam();
         productQueryParam.setCategory(category);
@@ -55,14 +49,7 @@ public class ProductController {
         productQueryParam.setLimit(limit);
         productQueryParam.setOffset(offset);
 
-        List<Product>productList=productService.getProducts(productQueryParam);
-        Integer total=productService.countProducts(productQueryParam);
-
-        Page<Product>page=new Page<>();
-        page.setLimit(limit);
-        page.setOffset(offset);
-        page.setTotal(total);
-        page.setList(productList);
+        Page<Product>page=productService.getProducts(productQueryParam);
 
         return ResponseEntity.ok().body(page);
     }
@@ -71,17 +58,11 @@ public class ProductController {
 
     @PutMapping("/products/{productId}")
     public ResponseEntity<Product> updateProduct(@PathVariable Integer productId,@RequestBody @Valid ProductUpdateRequest productUpdateRequest) {
-        Product product=productService.getProductById(productId);
-        if(product == null){
-            return ResponseEntity.notFound().build();
-        }else{
-            productService.updateProduct(productId, productUpdateRequest);
-            Product updateProduct=productService.getProductById(productId);
-            return ResponseEntity.ok().body(updateProduct);
-        }
+        productService.updateProduct(productId,productUpdateRequest);
+        return ResponseEntity.ok().build();
 
     }
-    @DeleteMapping("products/{productId}")
+    @DeleteMapping("/products/{productId}")
     public ResponseEntity<Product> deleteProduct(@PathVariable Integer productId) {
         productService.deleteProductById(productId);
         return ResponseEntity.noContent().build();
