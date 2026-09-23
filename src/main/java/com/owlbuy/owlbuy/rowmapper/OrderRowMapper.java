@@ -29,8 +29,8 @@ public class OrderRowMapper implements RowMapper<Orders> {
         orders.setShippingName(rs.getString("shipping_name"));
         orders.setShippingPhone(rs.getString("shipping_phone"));
         orders.setShippingAddress(rs.getString("shipping_address"));
-        orders.setCreatedDate(rs.getDate("created_date"));
-        orders.setUpdatedDate(rs.getDate("updated_date"));
+        orders.setCreatedDate(rs.getTimestamp("created_date"));
+        orders.setUpdatedDate(rs.getTimestamp("updated_date"));
 
         return orders;
     }

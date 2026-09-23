@@ -14,7 +14,7 @@ public class MemberRowMapper implements RowMapper<Member> {
         member.setMemberName(rs.getString("member_name"));
         member.setEmail(rs.getString("email"));
         member.setPassword(rs.getString("password"));
-        member.setCreatedDate(rs.getDate("created_date"));
+        member.setCreatedDate(rs.getTimestamp("created_date"));
 
         return member;
     }

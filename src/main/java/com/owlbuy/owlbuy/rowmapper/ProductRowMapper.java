@@ -28,8 +28,8 @@ public class ProductRowMapper implements RowMapper<Product> {
         ProductStatus status=ProductStatus.valueOf(r.toUpperCase());
         product.setStatus(status.name());
 
-        product.setCreatedDate(rs.getDate("created_date"));
-        product.setUpdatedDate(rs.getDate("updated_date"));
+        product.setCreatedDate(rs.getTimestamp("created_date"));
+        product.setUpdatedDate(rs.getTimestamp("updated_date"));
 
 
 

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public enum OrderStatus {
     PENDING("待付款"),
     PAID("已付款"),
+    PROCESSING("處理中"),
     SHIPPED("已出貨"),
     DELIVERED("已送達"),
     COMPLETED("已完成"),

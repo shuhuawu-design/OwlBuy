@@ -47,4 +47,12 @@ public class OrderController {
 
         return ResponseEntity.ok(page);
     }
+    @DeleteMapping("/order/{orderId}")
+    public ResponseEntity<OrderResponse> cancelOrder(@AuthenticationPrincipal CustomUserDetail memberDetail,
+                                            @PathVariable Integer orderId){
+        Integer memberId=memberDetail.getMemberId();
+        OrderResponse order=orderService.cancelOrder(memberId,orderId);
+
+        return ResponseEntity.ok().body(order);
+    }
 }

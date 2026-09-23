@@ -3,6 +3,7 @@ package com.owlbuy.owlbuy.dto;
 import com.owlbuy.owlbuy.constant.OrderStatus;
 import com.owlbuy.owlbuy.constant.PaymentMethod;
 import com.owlbuy.owlbuy.model.OrderItem;
+import com.owlbuy.owlbuy.model.Orders;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -108,5 +109,19 @@ public class OrderResponse {
 
     public void setUpdatedDate(Date updatedDate) {
         this.updatedDate = updatedDate;
+    }
+
+    public OrderResponse(Orders order,List< OrderItemResponse> orderItemList) {
+        this.orderId = order.getOrderId();
+        this.orderSn = order.getOrderSn();
+        this.status = order.getStatus();
+        this.totalAmount = order.getTotalAmount();
+        this.paymentMethod = order.getPaymentMethod();
+        this.shippingName = order.getShippingName();
+        this.shippingPhone = order.getShippingPhone();
+        this.shippingAddress = order.getShippingAddress();
+        this.orderItemList=orderItemList;
+        this.createdDate = order.getCreatedDate();
+        this.updatedDate = order.getUpdatedDate();
     }
 }

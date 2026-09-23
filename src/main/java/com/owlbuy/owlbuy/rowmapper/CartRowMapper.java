@@ -12,7 +12,7 @@ public class CartRowMapper implements RowMapper<Cart> {
         Cart cart=new Cart();
         cart.setCartId(rs.getInt("cart_id"));
         cart.setMemberId(rs.getInt("member_id"));
-        cart.setCreated_date(rs.getDate("created_date"));
+        cart.setCreated_date(rs.getTimestamp("created_date"));
 
 
         return cart;

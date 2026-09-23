@@ -1,5 +1,6 @@
 package com.owlbuy.owlbuy.service.impl;
 
+import com.owlbuy.owlbuy.constant.OrderStatus;
 import com.owlbuy.owlbuy.constant.PaymentMethod;
 import com.owlbuy.owlbuy.dao.CartDao;
 import com.owlbuy.owlbuy.dao.OrderDao;
@@ -13,10 +14,13 @@ import com.owlbuy.owlbuy.model.OrderItem;
 import com.owlbuy.owlbuy.model.Orders;
 import com.owlbuy.owlbuy.model.Product;
 import com.owlbuy.owlbuy.service.OrderService;
+import com.owlbuy.owlbuy.util.GenerateSn;
 import com.owlbuy.owlbuy.util.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
+
+import static com.owlbuy.owlbuy.constant.PaymentMethod.COD;
 
 @Component
 public class OrderServiceImpl implements OrderService {
@@ -41,7 +47,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void createOrder(Integer memberId, OrderRequest orderRequest) {
         PaymentMethod paymentMethod = orderRequest.getPaymentMethod();
-        String orderSn=generateOrderSn(memberId);
+
+        String orderSn= GenerateSn.generateSn(memberId);
         String shippingName = orderRequest.getShippingName();
         String shippingPhone = orderRequest.getShippingPhone();
         String shippingAddress = orderRequest.getShippingAddress();
@@ -88,6 +95,12 @@ public class OrderServiceImpl implements OrderService {
         order.setMemberId(memberId);
         order.setTotalAmount(totalAmount);
         order.setPaymentMethod(paymentMethod);
+
+        if(paymentMethod==PaymentMethod.COD) {
+            order.setStatus(OrderStatus.PROCESSING);
+        }else{
+            order.setStatus(OrderStatus.PENDING);
+        }
         order.setShippingName(shippingName);
         order.setShippingPhone(shippingPhone);
         order.setShippingAddress(shippingAddress);
@@ -139,23 +152,12 @@ public class OrderServiceImpl implements OrderService {
         }
         List<OrderResponse>orderResponseList=new ArrayList<>();
         for (Orders orders:orderlist){
-            OrderResponse orderResponse=new OrderResponse();
-            orderResponse.setOrderId(orders.getOrderId());
-            orderResponse.setOrderSn(orders.getOrderSn());
-            orderResponse.setStatus(orders.getStatus());
-            orderResponse.setTotalAmount(orders.getTotalAmount());
-            orderResponse.setPaymentMethod(orders.getPaymentMethod());
-            orderResponse.setShippingName(orders.getShippingName());
-            orderResponse.setShippingPhone(orders.getShippingPhone());
-            orderResponse.setShippingAddress(orders.getShippingAddress());
-            orderResponse.setCreatedDate(orders.getCreatedDate());
-            orderResponse.setUpdatedDate(orders.getUpdatedDate());
 
             List<OrderItemResponse>orderItemList=orderItemsMap.get(orders.getOrderId());
             if(orderItemList==null||orderItemList.isEmpty()){
                 orderItemList=new ArrayList<>();
             }
-            orderResponse.setOrderItemList(orderItemList);
+            OrderResponse orderResponse=new OrderResponse(orders,orderItemList);
 
             orderResponseList.add(orderResponse);
 
@@ -169,16 +171,28 @@ public class OrderServiceImpl implements OrderService {
         return page;
     }
 
-    private static String generateOrderSn(Integer memberId) {
-        // 1. 年月日時分秒 (14碼)
-        String dateTimeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    @Transactional
+    @Override
+    public OrderResponse cancelOrder(Integer memberId, Integer orderId) {
+        Orders order=orderDao.getOrderById(memberId,orderId);
 
-        // 2. 會員 ID 補齊至 6 位 (例如 memberId=123 -> "000123")
-        String memberIdStr = String.format("%06d", memberId % 1000000);
+        if(order==null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"查詢不到該訂單");
+        }
 
-        // 3. 2 位隨機數 (10 ~ 99)
-        int randomNum = ThreadLocalRandom.current().nextInt(10, 100);
+        if(order.getStatus()== OrderStatus.PENDING||order.getStatus()==OrderStatus.PROCESSING) {
 
-        return dateTimeStr + memberIdStr + randomNum;
+            List<OrderItemResponse> orderItemResponse = orderDao.getOrderItemById(memberId, orderId);
+            for(OrderItemResponse orderItem:orderItemResponse){
+                productDao.increaseStock(orderItem.getProductId(), orderItem.getQuantity());
+            }
+            orderDao.cancelOrder(orderId);
+            Orders newOrder=orderDao.getOrderById(memberId,orderId);
+            return new OrderResponse(newOrder,orderItemResponse);
+
+        }else{
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"訂單已出貨或已完成，無法取消訂單");
+        }
+
     }
 }

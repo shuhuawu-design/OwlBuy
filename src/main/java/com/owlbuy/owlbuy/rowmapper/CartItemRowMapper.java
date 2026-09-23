@@ -14,8 +14,8 @@ public class CartItemRowMapper implements RowMapper<CartItem> {
         cartItem.setCartId(rs.getInt("cart_id"));
         cartItem.setProductId(rs.getInt("product_id"));
         cartItem.setQuantity(rs.getInt("quantity"));
-        cartItem.setCreatedDate(rs.getDate("created_date"));
-        cartItem.setUpdatedDate(rs.getDate("updated_date"));
+        cartItem.setCreatedDate(rs.getTimestamp("created_date"));
+        cartItem.setUpdatedDate(rs.getTimestamp("updated_date"));
 
         return cartItem;
     }
