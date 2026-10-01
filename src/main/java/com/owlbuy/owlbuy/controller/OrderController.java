@@ -1,5 +1,6 @@
 package com.owlbuy.owlbuy.controller;
 
+import com.owlbuy.owlbuy.constant.OrderStatus;
 import com.owlbuy.owlbuy.dto.OrderQueryParam;
 import com.owlbuy.owlbuy.dto.OrderRequest;
 import com.owlbuy.owlbuy.dto.OrderResponse;
@@ -47,11 +48,11 @@ public class OrderController {
 
         return ResponseEntity.ok(page);
     }
-    @DeleteMapping("/order/{orderId}")
+    @PatchMapping("/order/{orderId}")
     public ResponseEntity<OrderResponse> cancelOrder(@AuthenticationPrincipal CustomUserDetail memberDetail,
-                                            @PathVariable Integer orderId){
+                                            @PathVariable Integer orderId,@RequestBody String cancelReason){
         Integer memberId=memberDetail.getMemberId();
-        OrderResponse order=orderService.cancelOrder(memberId,orderId);
+        OrderResponse order=orderService.cancelOrder(memberId,orderId, cancelReason);
 
         return ResponseEntity.ok().body(order);
     }

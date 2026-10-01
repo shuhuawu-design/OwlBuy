@@ -11,7 +11,8 @@ public enum OrderStatus {
     SHIPPED("已出貨"),
     DELIVERED("已送達"),
     COMPLETED("已完成"),
-    CANCELED("已取消");
+    CANCELED("已取消"),
+    REFUNDED("已退款");
 
     private final String desc;
 

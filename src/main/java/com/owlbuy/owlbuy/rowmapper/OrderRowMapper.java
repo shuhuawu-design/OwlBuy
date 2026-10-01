@@ -32,6 +32,9 @@ public class OrderRowMapper implements RowMapper<Orders> {
         orders.setCreatedDate(rs.getTimestamp("created_date"));
         orders.setUpdatedDate(rs.getTimestamp("updated_date"));
 
+        orders.setTrackingNumber(rs.getString("tracking_number"));
+        orders.setCancelReason(rs.getString("cancel_reason"));
+
         return orders;
     }
 }

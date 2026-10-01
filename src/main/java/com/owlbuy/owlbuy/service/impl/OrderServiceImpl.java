@@ -5,10 +5,7 @@ import com.owlbuy.owlbuy.constant.PaymentMethod;
 import com.owlbuy.owlbuy.dao.CartDao;
 import com.owlbuy.owlbuy.dao.OrderDao;
 import com.owlbuy.owlbuy.dao.ProductDao;
-import com.owlbuy.owlbuy.dto.OrderItemResponse;
-import com.owlbuy.owlbuy.dto.OrderQueryParam;
-import com.owlbuy.owlbuy.dto.OrderRequest;
-import com.owlbuy.owlbuy.dto.OrderResponse;
+import com.owlbuy.owlbuy.dto.*;
 import com.owlbuy.owlbuy.model.CartItem;
 import com.owlbuy.owlbuy.model.OrderItem;
 import com.owlbuy.owlbuy.model.Orders;
@@ -23,16 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
-
-import static com.owlbuy.owlbuy.constant.PaymentMethod.COD;
+import java.util.*;
 
 @Component
 public class OrderServiceImpl implements OrderService {
@@ -48,21 +36,21 @@ public class OrderServiceImpl implements OrderService {
     public void createOrder(Integer memberId, OrderRequest orderRequest) {
         PaymentMethod paymentMethod = orderRequest.getPaymentMethod();
 
-        String orderSn= GenerateSn.generateSn(memberId);
+        String orderSn = GenerateSn.generateSn(memberId);
         String shippingName = orderRequest.getShippingName();
         String shippingPhone = orderRequest.getShippingPhone();
         String shippingAddress = orderRequest.getShippingAddress();
-        List<Integer>cartItemIdList = orderRequest.getCartItemIdList();
-        if(cartItemIdList==null|| cartItemIdList.isEmpty()){
+        List<Integer> cartItemIdList = orderRequest.getCartItemIdList();
+        if (cartItemIdList == null || cartItemIdList.isEmpty()) {
             throw new IllegalArgumentException("購物車不得為空");
         }
 
-        BigDecimal totalAmount=BigDecimal.ZERO;
-        List<OrderItem>orderItemList=new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        List<OrderItem> orderItemList = new ArrayList<>();
 
         for (Integer cartItemId : cartItemIdList) {
-            CartItem cartItem = cartDao.getCartItemByCartItemId(cartItemId,memberId);
-            if(cartItem==null){
+            CartItem cartItem = cartDao.getCartItemByCartItemId(cartItemId, memberId);
+            if (cartItem == null) {
                 throw new IllegalArgumentException("找不到購物車項目");
             }
             Integer productId = cartItem.getProductId();
@@ -81,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
             BigDecimal subtotal = price.multiply(new BigDecimal(quantity));
             totalAmount = totalAmount.add(subtotal);
 
-            OrderItem orderItem= new OrderItem();
+            OrderItem orderItem = new OrderItem();
             orderItem.setProductId(productId);
             orderItem.setProductName(product.getProductName());
             orderItem.setPrice(price);
@@ -90,29 +78,28 @@ public class OrderServiceImpl implements OrderService {
 
 
         }
-        Orders order=new Orders();
+        Orders order = new Orders();
         order.setOrderSn(orderSn);
         order.setMemberId(memberId);
         order.setTotalAmount(totalAmount);
         order.setPaymentMethod(paymentMethod);
 
-        if(paymentMethod==PaymentMethod.COD) {
+        if (paymentMethod == PaymentMethod.COD) {
             order.setStatus(OrderStatus.PROCESSING);
-        }else{
+        } else {
             order.setStatus(OrderStatus.PENDING);
         }
         order.setShippingName(shippingName);
         order.setShippingPhone(shippingPhone);
         order.setShippingAddress(shippingAddress);
-        Integer orderId=orderDao.createOrder(order);
+        Integer orderId = orderDao.createOrder(order);
 
 
-
-        for(OrderItem orderItem :orderItemList){
+        for (OrderItem orderItem : orderItemList) {
             orderItem.setOrderId(orderId);
             Integer updateRows = productDao.decreaseStock(orderItem.getProductId(), orderItem.getQuantity());
-            if (updateRows == 0){
-                throw new IllegalArgumentException("商品 "+orderItem.getProductName()+ " 庫存不足，下單失敗");
+            if (updateRows == 0) {
+                throw new IllegalArgumentException("商品 " + orderItem.getProductName() + " 庫存不足，下單失敗");
             }
         }
 
@@ -122,11 +109,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<OrderResponse> getOrders(OrderQueryParam orderQueryParam) {
-        Integer total=orderDao.countOrders(orderQueryParam);
+        Integer total = orderDao.countOrders(orderQueryParam);
 
-        List<Orders>orderlist=orderDao.getOrders(orderQueryParam);
-        if(orderlist==null||orderlist.isEmpty()){
-            Page<OrderResponse> page=new Page<>();
+        List<Orders> orderlist = orderDao.getOrders(orderQueryParam);
+        if (orderlist == null || orderlist.isEmpty()) {
+            Page<OrderResponse> page = new Page<>();
             page.setLimit(orderQueryParam.getLimit());
             page.setOffset(orderQueryParam.getOffset());
             page.setTotal(0);
@@ -134,36 +121,36 @@ public class OrderServiceImpl implements OrderService {
             return page;
         }
 
-        List<Integer>orderIdList=new ArrayList<>();
-        for (Orders orders:orderlist){
+        List<Integer> orderIdList = new ArrayList<>();
+        for (Orders orders : orderlist) {
             orderIdList.add(orders.getOrderId());
         }
 
-        List<OrderItemResponse>orderItems=orderDao.getOrderItemsByOrderIdList(orderIdList);
+        List<OrderItemResponse> orderItems = orderDao.getOrderItemsByOrderIdList(orderIdList);
 
-        Map<Integer, List<OrderItemResponse>>orderItemsMap=new HashMap<>();
-        for(OrderItemResponse orderItem:orderItems){
-            Integer orderId=orderItem.getOrderId();
+        Map<Integer, List<OrderItemResponse>> orderItemsMap = new HashMap<>();
+        for (OrderItemResponse orderItem : orderItems) {
+            Integer orderId = orderItem.getOrderId();
 
-            if (!orderItemsMap.containsKey(orderId)){
+            if (!orderItemsMap.containsKey(orderId)) {
                 orderItemsMap.put(orderId, new ArrayList<>());
             }
             orderItemsMap.get(orderId).add(orderItem);
         }
-        List<OrderResponse>orderResponseList=new ArrayList<>();
-        for (Orders orders:orderlist){
+        List<OrderResponse> orderResponseList = new ArrayList<>();
+        for (Orders orders : orderlist) {
 
-            List<OrderItemResponse>orderItemList=orderItemsMap.get(orders.getOrderId());
-            if(orderItemList==null||orderItemList.isEmpty()){
-                orderItemList=new ArrayList<>();
+            List<OrderItemResponse> orderItemList = orderItemsMap.get(orders.getOrderId());
+            if (orderItemList == null || orderItemList.isEmpty()) {
+                orderItemList = new ArrayList<>();
             }
-            OrderResponse orderResponse=new OrderResponse(orders,orderItemList);
+            OrderResponse orderResponse = new OrderResponse(orders, orderItemList);
 
             orderResponseList.add(orderResponse);
 
         }
 
-        Page<OrderResponse> page=new Page<>();
+        Page<OrderResponse> page = new Page<>();
         page.setLimit(orderQueryParam.getLimit());
         page.setOffset(orderQueryParam.getOffset());
         page.setTotal(total);
@@ -173,26 +160,107 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public OrderResponse cancelOrder(Integer memberId, Integer orderId) {
-        Orders order=orderDao.getOrderById(memberId,orderId);
+    public OrderResponse cancelOrder(Integer memberId, Integer orderId, String cancelReason) {
+        Orders order = orderDao.getOrderByMemberIdAndOrderId(memberId, orderId);
 
-        if(order==null){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"查詢不到該訂單");
+        if (order == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "查詢不到該訂單");
         }
 
-        if(order.getStatus()== OrderStatus.PENDING||order.getStatus()==OrderStatus.PROCESSING) {
+        if (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.PROCESSING) {
 
             List<OrderItemResponse> orderItemResponse = orderDao.getOrderItemById(memberId, orderId);
-            for(OrderItemResponse orderItem:orderItemResponse){
+            for (OrderItemResponse orderItem : orderItemResponse) {
                 productDao.increaseStock(orderItem.getProductId(), orderItem.getQuantity());
             }
-            orderDao.cancelOrder(orderId);
-            Orders newOrder=orderDao.getOrderById(memberId,orderId);
-            return new OrderResponse(newOrder,orderItemResponse);
+            orderDao.cancelOrder(orderId, cancelReason);
+            Orders newOrder = orderDao.getOrderByMemberIdAndOrderId(memberId, orderId);
+            return new OrderResponse(newOrder, orderItemResponse);
 
-        }else{
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"訂單已出貨或已完成，無法取消訂單");
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "訂單已出貨或已完成，無法取消訂單");
         }
+
+    }
+
+    @Override
+    public Orders updateOrderStatus(Integer orderId, OrderUpdateRequest orderUpdateRequest) {
+        Orders order = orderDao.getOrderByOrderId(orderId);
+        if (order == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "查詢不到該訂單");
+        }
+
+
+        validSwitchStatus(order,orderUpdateRequest);
+
+
+        order.setStatus(orderUpdateRequest.getStatus());
+        order.setUpdatedDate(new Date());
+        orderDao.updateOrderStatus(order);
+
+        return orderDao.getOrderByOrderId(orderId);
+
+
+    }
+
+    private void validSwitchStatus (Orders order, OrderUpdateRequest orderUpdateRequest){
+        OrderStatus currentStatus = order.getStatus();
+        OrderStatus newStatus = orderUpdateRequest.getStatus();
+        PaymentMethod paymentMethod = order.getPaymentMethod();
+
+        if (currentStatus.equals(newStatus)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "訂單狀態未發生變更");
+        }
+        if (currentStatus.equals(OrderStatus.CANCELED)||currentStatus.equals(OrderStatus.REFUNDED)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "該訂單已取消，無法更改訂單");
+        }
+
+        if (currentStatus.equals(OrderStatus.COMPLETED)&&newStatus.equals(OrderStatus.CANCELED)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "訂單狀態已完成，無法取消，請走退款流程");
+        }else if (currentStatus.equals(OrderStatus.COMPLETED)&&!newStatus.equals(OrderStatus.REFUNDED)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"不合法的狀態變更");
+        }
+
+        if (paymentMethod.equals(PaymentMethod.COD)) {
+            if((currentStatus.equals(OrderStatus.PENDING)||currentStatus.equals(OrderStatus.PROCESSING))&& newStatus.equals(OrderStatus.CANCELED)) {
+                if( orderUpdateRequest.getCancelReason()==null||orderUpdateRequest.getCancelReason().isBlank()) {
+                    order.setCancelReason("店家自行取消訂單");
+                }
+            }else if(currentStatus.equals(OrderStatus.PENDING)&& !newStatus.equals(OrderStatus.PROCESSING)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
+            }
+        }
+
+        if (paymentMethod.equals(PaymentMethod.CREDIT_CARD)||paymentMethod.equals(PaymentMethod.TRANSFER)) {
+            if(currentStatus.equals(OrderStatus.PENDING)&& newStatus.equals(OrderStatus.CANCELED)) {
+                if( orderUpdateRequest.getCancelReason()==null||orderUpdateRequest.getCancelReason().isBlank()) {
+                    order.setCancelReason("店家自行取消訂單");
+                }
+            }else if(currentStatus.equals(OrderStatus.PENDING)&& !newStatus.equals(OrderStatus.PROCESSING)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
+            }
+        }
+        if (currentStatus.equals(OrderStatus.PROCESSING)&&newStatus.equals(OrderStatus.SHIPPED)) {
+            if (order.getTrackingNumber()==null||order.getTrackingNumber().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"需填寫物流單號");
+            }
+        }else if (currentStatus.equals(OrderStatus.PROCESSING)&&!newStatus.equals(OrderStatus.CANCELED)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
+        }
+
+        if (currentStatus.equals(OrderStatus.SHIPPED)&&!newStatus.equals(OrderStatus.DELIVERED)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
+        }
+
+        if (currentStatus.equals(OrderStatus.DELIVERED)&& !newStatus.equals(OrderStatus.COMPLETED)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
+        }
+
+
+
+
+
+
 
     }
 }

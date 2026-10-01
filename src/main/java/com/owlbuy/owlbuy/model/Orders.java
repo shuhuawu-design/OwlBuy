@@ -18,6 +18,8 @@ public class Orders {
     private String shippingAddress;
     private Date createdDate;
     private Date updatedDate;
+    private String trackingNumber;
+    private String cancelReason;
 
     public Integer getOrderId() {
         return orderId;
@@ -105,5 +107,21 @@ public class Orders {
 
     public void setUpdatedDate(Date updatedDate) {
         this.updatedDate = updatedDate;
+    }
+
+    public String getTrackingNumber() {
+        return trackingNumber;
+    }
+
+    public void setTrackingNumber(String trackingNumber) {
+        this.trackingNumber = trackingNumber;
+    }
+
+    public String getCancelReason() {
+        return cancelReason;
+    }
+
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
     }
 }

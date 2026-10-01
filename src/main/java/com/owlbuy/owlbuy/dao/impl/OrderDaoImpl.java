@@ -81,7 +81,7 @@ public class OrderDaoImpl implements OrderDao {
     public List<Orders> getOrders(OrderQueryParam orderQueryParam) {
         String sql= """
                 SELECT order_id, order_sn, member_id, status, total_amount, payment_method, shipping_name, shipping_phone,
-                shipping_address, created_date, updated_date
+                shipping_address, created_date, updated_date, tracking_number, cancel_reason
                 FROM orders WHERE 1=1 """;
         Map<String,Object> map=new HashMap<>();
 
@@ -125,8 +125,8 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
-    public Orders getOrderById(Integer memberId, Integer orderId) {
-        String sql="SELECT order_id, order_sn, member_id, status, total_amount, payment_method, shipping_name, shipping_phone, shipping_address, created_date, updated_date FROM orders WHERE order_id= :orderId AND member_id= :memberId";
+    public Orders getOrderByMemberIdAndOrderId(Integer memberId, Integer orderId) {
+        String sql="SELECT order_id, order_sn, member_id, status, total_amount, payment_method, shipping_name, shipping_phone, shipping_address, created_date, updated_date, tracking_number, cancel_reason FROM orders WHERE order_id= :orderId AND member_id= :memberId";
         Map<String,Object> map=new HashMap<>();
         map.put("orderId",orderId);
         map.put("memberId",memberId);
@@ -159,12 +159,43 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
-    public void cancelOrder(Integer orderId) {
-        String sql="UPDATE orders SET status=:status ,updated_date= NOW() WHERE order_id= :order_id";
+    public Orders getOrderByOrderId(Integer orderId) {
+        String sql="SELECT order_id, order_sn, member_id, status, total_amount, payment_method, shipping_name, shipping_phone, shipping_address, created_date, updated_date, tracking_number, cancel_reason FROM orders WHERE order_id= :orderId";
+
+        Map<String,Object> map=new HashMap<>();
+        map.put("orderId",orderId);
+
+        List<Orders> order=namedParameterJdbcTemplate.query(sql,map,new OrderRowMapper());
+        if(!order.isEmpty()){
+            return order.get(0);
+        }else{
+            return null;
+        }
+    }
+
+    @Override
+    public void updateOrderStatus(Orders order) {
+        String sql="UPDATE orders SET status=:status,tracking_number=:tracking_number ,updated_date= NOW(),cancel_reason=:cancel_reason WHERE order_id= :order_id";
+
+        Map<String,Object> map=new HashMap<>();
+        map.put("order_id",order.getOrderId());
+        map.put("status",order.getStatus().name());
+        map.put("cancel_reason",order.getCancelReason());
+        map.put("tracking_number",order.getTrackingNumber());
+
+
+        namedParameterJdbcTemplate.update(sql,map);
+    }
+
+
+    @Override
+    public void cancelOrder(Integer orderId,String cancelReason) {
+        String sql="UPDATE orders SET status=:status ,updated_date= NOW(),cancel_reason=:cancel_reason WHERE order_id= :order_id";
 
         Map<String,Object> map=new HashMap<>();
         map.put("status", OrderStatus.CANCELED.name());
         map.put("order_id",orderId);
+        map.put("cancel_reason",cancelReason);
 
         namedParameterJdbcTemplate.update(sql,map);
     }

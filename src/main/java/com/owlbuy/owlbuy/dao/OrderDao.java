@@ -17,9 +17,11 @@ public interface OrderDao {
     Integer countOrders(OrderQueryParam orderQueryParam);
     List<Orders>getOrders(OrderQueryParam orderQueryParam);
     List<OrderItemResponse>getOrderItemsByOrderIdList(List<Integer> orderIdList);
-    Orders getOrderById(Integer memberId, Integer orderId);
+    Orders getOrderByMemberIdAndOrderId(Integer memberId, Integer orderId);
     List<OrderItemResponse> getOrderItemById(Integer memberId, Integer orderId);
-    void cancelOrder(Integer orderId);
+    void cancelOrder(Integer orderId, String cancelReason);
+    Orders getOrderByOrderId(Integer orderId);
+    void updateOrderStatus(Orders order);
 
 
 
