@@ -3,6 +3,8 @@ package com.owlbuy.owlbuy.constant;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import static com.owlbuy.owlbuy.constant.PaymentMethod.COD;
+
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum OrderStatus {
     PENDING("待付款"),
@@ -43,6 +45,32 @@ public enum OrderStatus {
 
         // 若完全匹配不到，回傳 null 或拋出自訂例外，避免程式直接 crash
         return null;
+    }
+
+
+    public boolean canTransfer(OrderStatus newStatus, PaymentMethod paymentMethod) {
+        return switch (this) {
+            case PENDING -> {
+                if (paymentMethod == COD) {
+                    yield newStatus == PROCESSING || newStatus == CANCELED;
+                } else {
+                    yield newStatus == PAID || newStatus == CANCELED;
+                }
+            }
+            case PAID -> newStatus == PROCESSING;
+            case PROCESSING -> {
+                if (paymentMethod == COD) {
+                    yield newStatus == SHIPPED || newStatus == CANCELED;
+                } else {
+                    yield newStatus == SHIPPED;
+                }
+            }
+            case SHIPPED -> newStatus == DELIVERED;
+            case DELIVERED -> newStatus == COMPLETED;
+            case COMPLETED -> newStatus == REFUNDED;
+
+            default -> false;
+        };
     }
 
 }

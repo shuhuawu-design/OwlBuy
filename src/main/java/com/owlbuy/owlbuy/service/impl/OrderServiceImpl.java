@@ -195,6 +195,7 @@ public class OrderServiceImpl implements OrderService {
 
 
         order.setStatus(orderUpdateRequest.getStatus());
+        order.setTrackingNumber(orderUpdateRequest.getTrackingNumber());
         order.setUpdatedDate(new Date());
         orderDao.updateOrderStatus(order);
 
@@ -203,7 +204,7 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
-    private void validSwitchStatus (Orders order, OrderUpdateRequest orderUpdateRequest){
+    private void validSwitchStatus (Orders order, OrderUpdateRequest orderUpdateRequest) {
         OrderStatus currentStatus = order.getStatus();
         OrderStatus newStatus = orderUpdateRequest.getStatus();
         PaymentMethod paymentMethod = order.getPaymentMethod();
@@ -211,56 +212,30 @@ public class OrderServiceImpl implements OrderService {
         if (currentStatus.equals(newStatus)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "訂單狀態未發生變更");
         }
-        if (currentStatus.equals(OrderStatus.CANCELED)||currentStatus.equals(OrderStatus.REFUNDED)) {
+        if (currentStatus.equals(OrderStatus.CANCELED) || currentStatus.equals(OrderStatus.REFUNDED)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "該訂單已取消，無法更改訂單");
         }
 
-        if (currentStatus.equals(OrderStatus.COMPLETED)&&newStatus.equals(OrderStatus.CANCELED)) {
+        if (currentStatus.equals(OrderStatus.COMPLETED) && newStatus.equals(OrderStatus.CANCELED)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "訂單狀態已完成，無法取消，請走退款流程");
-        }else if (currentStatus.equals(OrderStatus.COMPLETED)&&!newStatus.equals(OrderStatus.REFUNDED)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"不合法的狀態變更");
         }
 
-        if (paymentMethod.equals(PaymentMethod.COD)) {
-            if((currentStatus.equals(OrderStatus.PENDING)||currentStatus.equals(OrderStatus.PROCESSING))&& newStatus.equals(OrderStatus.CANCELED)) {
-                if( orderUpdateRequest.getCancelReason()==null||orderUpdateRequest.getCancelReason().isBlank()) {
-                    order.setCancelReason("店家自行取消訂單");
-                }
-            }else if(currentStatus.equals(OrderStatus.PENDING)&& !newStatus.equals(OrderStatus.PROCESSING)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
-            }
-        }
-
-        if (paymentMethod.equals(PaymentMethod.CREDIT_CARD)||paymentMethod.equals(PaymentMethod.TRANSFER)) {
-            if(currentStatus.equals(OrderStatus.PENDING)&& newStatus.equals(OrderStatus.CANCELED)) {
-                if( orderUpdateRequest.getCancelReason()==null||orderUpdateRequest.getCancelReason().isBlank()) {
-                    order.setCancelReason("店家自行取消訂單");
-                }
-            }else if(currentStatus.equals(OrderStatus.PENDING)&& !newStatus.equals(OrderStatus.PROCESSING)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
-            }
-        }
-        if (currentStatus.equals(OrderStatus.PROCESSING)&&newStatus.equals(OrderStatus.SHIPPED)) {
-            if (order.getTrackingNumber()==null||order.getTrackingNumber().isBlank()) {
+        if (newStatus.equals(OrderStatus.SHIPPED)) {
+            if(orderUpdateRequest.getTrackingNumber()==null || orderUpdateRequest.getTrackingNumber().isBlank()){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"需填寫物流單號");
             }
-        }else if (currentStatus.equals(OrderStatus.PROCESSING)&&!newStatus.equals(OrderStatus.CANCELED)) {
+        }
+        if (!currentStatus.canTransfer(newStatus, paymentMethod)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
         }
 
-        if (currentStatus.equals(OrderStatus.SHIPPED)&&!newStatus.equals(OrderStatus.DELIVERED)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
+        if (newStatus.equals(OrderStatus.CANCELED)) {
+            if (orderUpdateRequest.getCancelReason() == null || orderUpdateRequest.getCancelReason().isBlank()) {
+                order.setCancelReason("店家自行取消訂單");
+
+            }else {
+                order.setCancelReason(orderUpdateRequest.getCancelReason());
+            }
         }
-
-        if (currentStatus.equals(OrderStatus.DELIVERED)&& !newStatus.equals(OrderStatus.COMPLETED)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不合法的狀態變更");
-        }
-
-
-
-
-
-
-
     }
 }
